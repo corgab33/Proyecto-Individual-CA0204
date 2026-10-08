@@ -1,0 +1,13 @@
+---
+title: "Tarea #2"
+author: José Gabriel Coronel Cascante
+execute:
+  eval: true
+  output: true
+  echo: true
+format:
+  html:
+    embed-resources: true
+---
+
+# ¡Hola Mundo!
