@@ -1,13 +1,430 @@
 ---
-title: "Tarea #2"
+title: Análisis de Competitividad de las cinco Principales Ligas del Fútbol Europeo
+
 author: José Gabriel Coronel Cascante
-execute:
-  eval: true
-  output: true
-  echo: true
+
 format:
-  html:
-    embed-resources: true
+  typst:
+    papersize: a4
+    margin:
+      x: 1.8cm
+      y: 1.6cm
+    fontsize: 12pt
+    toc: false
+    number-sections: false
+    fig-format: png
+    fig-dpi: 200
+
+execute:
+  echo: false
+  warning: false
+  message: false
+
+editor: 
+  markdown: 
+    wrap: 72
 ---
 
-# ¡Hola Mundo!
+# Introducción
+
+Las cinco principales ligas del fútbol europeo son eventos consumidos
+internacionalmente, con gran relevancia cultural y comercial. En todas
+las ediciones se determina un ganador así como los equipos
+clasificados a las distintas competiciones internacionales, y los
+equipos que descienden a la segunda división. Aunque estas piezas de
+información son las más llamativas, hay una métrica que carece de
+atención: la competitividad.
+
+Por competitividad, se entiende la paridad en el rendimiento de los
+equipos de la competición. Este aspecto puede ser de gran influencia
+en el éxito comercial de una competición. De esta manera, el presente
+proyecto pretende medir la competitividad en las cinco principales
+ligas del fútbol europeo.
+
+A continuación, se describe la construcción de una medida para la
+competitividad en una liga de fútbol. Posteriormente, esta medida se
+aplica a las competiciones Bundesliga, La Liga, Ligue 1, Premier
+League y Serie A, comentando los resultados.
+
+# Objetivo
+
+Medir la noción de competitividad presente en las competiciones de
+fútbol profesional Bundesliga, La Liga, Ligue 1, Premier League y
+Serie A, entre las temporadas 2021-2022 y 2025-2026.
+
+# Metodología
+
+Para cumplir con el objetivo del presente proyecto, se construirá una
+medida de competitividad mediante tres etapas.
+
+1. Cálculo de una medida de rendimiento por equipo.
+2. Cálculo de una diferencia ponderada de rendimiento por competición.
+3. Selección de una competición de referencia y normalización de la
+   diferencia ponderada.
+
+La medida en cuestión se calcula a partir de los datos proveídos por
+Football Data Co UK (2026). El conjunto de datos seleccionado incluye
+los datos de partidos de las competiciones previamente mencionadas,
+disputados entre las temporadas 2021-2022 y 2025-2026. Esto debido a
+que las competiciones en cuestión resultan ser las más relevantes del
+continente europeo en términos comerciales. Por otro lado, el período
+delimitado de cinco temporadas es reciente e implica al menos 1500
+partidos por competición.
+
+## Rendimiento por Equipo
+
+Dada una competición $T$, se define $g_{T}$ como la cantidad de
+partidos de $T$ divida entre la cantidad total de goles registrados de
+$T$. Es decir, $g_{T}$ es el recíproco del promedio de goles anotados
+en $T$ por partido. De esta manera $g_{T}$, cuantifica la dificultad
+de anotar un gol en $T$.
+
+Sea $E$ un equipo que participa en $T$. Indexe los partidos disputados
+por $E$ con $(1, ..., P)$. Además, denote por
+
+- $F_{i}$ los goles a favor de $E$ en el $i$-ésimo partido para $i = 1,
+  ..., P$.
+- $C_{i}$ los goles en contra de $E$ en el $i$-ésimo partido para $i = 1,
+  ..., P$.
+  
+El rendimiento de $E$, se define como
+
+$$
+R_{E} := \frac{g_{T}}{P} \sum_{i = 1}^{P} (F_{i} - C_{i})
+$$
+
+Es decir, el rendimiento de $E$ es la diferencia de gol promedio por
+partido disputado, ajustada por $g_{T}$. Esto debido a que una gran
+diferencia de gol por partido indica menos rendimiento positivo en
+competiciones donde se anotan muchos goles por partido.
+
+## Diferencia Neta de Rendimiento
+
+Dada una competición $T$. Calculando el rendimiento de cada equipo
+participante en $T$, se puede construir una tabla de rendimiento para
+$T$ i.e. un listado del rendimiento de cada equipo, ordenado de forma
+decreciente. De esta manera, se pueden inspeccionar las diferencia en
+rendimiento entre equipos consecutivos en la tabla en
+cuestión. Mayores diferencias indican una mayor disparidad en los
+enfrentamientos, por ende una menor competitividad. Adicionalmente,
+estas diferencias tienen un mayor peso en las primeras posiciones de
+la tabla, puesto que esto indicaría que unos pocos equipos son
+superiores a la mayoría de equipos. Esto motiva la siguiente
+definición.
+
+Fije un parámetro $r \in (0, 1)$. Entonces, $r^{k - 1} \rightarrow 0$
+monotónamente cuando $k \rightarrow \infty$. Indexe los equipos de la
+tabla de rendimiento de $T$ con $\{E_{i}\}_{i = 1}^{N}$. Se define la diferencia
+neta de rendimiento de $T$ como
+
+$$
+\Delta_{T} := \sum_{i = 1}^{N - 1} (R_{E_{i}} - R_{E_{i + 1}}) r^{i - 1}
+$$
+
+Es decir, $\Delta_{T}$ es la suma de las diferencias de rendimiento
+consecutivas ponderadas por potencias de $r$. De esta manera, las
+diferencias tienen mayor peso en las primeras posiciones de la
+tabla. Entre más grande sea $\Delta_{T}$, menos competitiva es $T$.
+
+Ahora, resulta razonable imponer la restricción de que el peso para la
+diferencia en entre los equipos de la mitad de la tabla sea
+$\frac{1}{2}$. Se observa que las tablas de rendimiento tienen en
+promedio cerca de 26 equipos. Por ende,
+
+$$
+r^{\frac{26}{2} - 1} = \frac{1}{2} \iff r \approx 0.9439
+$$
+
+Este es el valor de $r$ que se utilizará para el cálculo de
+diferencias netas de rendimiento.
+
+## Normalización
+
+Con el fin de facilitar las comparaciones entre distintas
+competiciones. Se escoge una competición de referencia y se saturan
+las diferencias netas de rendimiento con respecto a esta competición
+de referencia. En este caso, se escoge la mediana de las diferencias
+netas de rendimiento como referencia.
+
+Entre más alta sea esta medida saturada, menos competitiva es una
+competición. Por lo tanto, se considera el complemento de la
+saturación. Dada una competición $T$, su medida de competitividad se
+define como
+
+$$
+\gamma_{T} := 1 - \frac{\Delta_{T}}{\Delta{T} + \Delta_{0}}
+$$
+
+donde $\Delta_{0}$ es la mediana de las diferencias netas de
+rendimiento a lo largo de todas las competiciones.
+
+# Resultados
+
+``` {r}
+
+library(readr)
+library(stringr)
+library(dplyr)
+library(purrr)
+library(tidyr)
+library(knitr)
+
+```
+
+## Análisis Exploratorio de Datos
+
+Se consideran los datos en formato CSV obtenidos en Football Data Co
+UK (2026). Estos datos están estructurados en un archivo distinto por
+cada temporada y competición, conteniendo una observación por partido
+disputado. Por esta razón, por cada competición, se concatenan todas
+las tablas de datos de las temporadas de tal competición. Se observan
+las siguientes cantidades de partidos para cada competición.
+
+``` {r}
+
+read.matches.df <- function(league.identifier) {
+    matches.df <- tibble()
+
+    for (initial.year in 2021:2025) {
+        file.path <- str_glue("data/{league.identifier}/{initial.year}-{initial.year + 1}.csv")
+
+        current.season.df <- read_csv(
+            file.path,
+            col_select = c("HomeTeam", "AwayTeam", "FTHG", "FTAG"),
+            col_types = cols(
+                HomeTeam = col_character(),
+                AwayTeam = col_character(),
+                FTHG = col_integer(),
+                FTAG = col_integer()
+            )
+        )
+
+        matches.df <- bind_rows(matches.df, current.season.df)
+    }
+
+    matches.df <- matches.df |>
+        rename(home.team = HomeTeam, away.team = AwayTeam, home.goals = FTHG, away.goals = FTAG)
+
+    matches.df
+}
+
+```
+
+``` {r}
+
+leagues.data <- list(
+    "bundesliga" = read.matches.df("bundesliga"),
+    "la-liga" = read.matches.df("la-liga"),
+    "ligue-1" = read.matches.df("ligue-1"),
+    "premier-league" = read.matches.df("premier-league"),
+    "serie-a" = read.matches.df("serie-a")
+)
+
+```
+
+``` {r}
+
+tibble(league = names(leagues.data)) |>
+    mutate(observations = map_int(leagues.data, nrow)) |>
+    kable(col.names = c("Competición", "Observaciones"))
+
+```
+
+Se observa que la Bundesliga y la Ligue 1 presentan una cantidad
+significativa de menos partidos, a pesar de que para toda competición
+se incluyen las mismas cinco temporadas.
+
+Luego, se puede calcular los goles promedio por partido en cada
+competición.
+
+``` {r}
+
+goal.weight <- function(matches.df) {
+    summary <- matches.df |>
+        mutate(total.goals = home.goals + away.goals) |>
+        summarise(n = n(), league.goals = sum(total.goals))
+
+    weight <- summary$n / summary$league.goals
+    stopifnot(is.finite(weight))
+
+    weight
+}
+
+```
+
+``` {r}
+
+tibble(league = names(leagues.data)) |>
+    mutate(average.goals = map_dbl(leagues.data, \(x) round(1/goal.weight(x), 2))) |>
+    kable(col.names = c("Competición", "Goles Promedio por Partido"))
+
+```
+
+Se puede ver que se anotan más goles en promedio en la Bundesliga, en
+comparación a las demás competiciones. En otras palabras, los goles
+_valen_ menos en la Bundesliga.
+
+## Resultados de la Metodología
+
+Primero, se calcula el rendimiento de cada equipo. Estos resultados se
+pueden resumir en tablas de rendimiento para cada competición. Por
+temas de brevedad, solamente se destacan los primeros ocho equipos de
+dos competiciones: Bundesliga y La Liga.
+
+``` {r}
+
+team.performance <- function(team.identifier, matches.df, weight) {
+    summary <- matches.df |>
+        filter(when_any(home.team == team.identifier, away.team == team.identifier)) |>
+        mutate(
+            goal.difference = case_when(
+                home.team == team.identifier ~ home.goals - away.goals,
+                .default = away.goals - home.goals
+            )
+        ) |>
+        summarise(
+            n = n(),
+            total.goal.difference = sum(goal.difference)
+        )
+
+    performance <- (summary$total.goal.difference / summary$n) * weight
+
+    performance
+}
+
+```
+
+``` {r}
+
+performance.table <- function(matches.df) {
+    weight <- goal.weight(matches.df)
+
+    team.performance.application <- function(team.identifier) {
+        team.performance(team.identifier, matches.df, weight)
+    }
+
+    table <- matches.df |>
+        summarise(.by = "home.team") |>
+        rename(team = home.team) |>
+        mutate(performance = map_dbl(team, team.performance.application)) |>
+        arrange(desc(performance))
+
+    table
+}
+
+```
+
+``` {r}
+
+performance.table(leagues.data[["bundesliga"]]) |>
+    mutate(performance = round(performance, 3)) |>
+    head(8) |>
+    kable(col.names = c("Equipo", "Rendimiento"))
+
+```
+
+En la Bundesliga se presenta una gran diferencia entre el primer
+equipo (Bayern Munich) y el segundo equipo (Leverkusen). Esta
+diferencia es una señal de una menor competitividad. Además, se
+observan dos equipos (Freiburg y Mainz) con rendimiento negativo entre
+los primeros ocho equipos.
+
+``` {r}
+
+performance.table(leagues.data[["la-liga"]]) |>
+    mutate(performance = round(performance, 3)) |>
+    head(8) |>
+    kable(col.names = c("Equipo", "Rendimiento"))
+
+```
+
+Por otro lado, La Liga exhibe una gran paridad entre los dos primeros
+equipos (Barcelona y Real Madrid), lo cual indica una mayor
+competitividad. Además, no hay ningún equipo con rendimiento negativo
+entre los primeros ocho equipos.
+
+Ahora, se calculan las diferencias netas de rendimiento para cada una
+de las competiciones.
+
+``` {r}
+
+net.performance.difference <- function(matches.df) {
+    position.weight.factor <- (1/2)^(1/12)
+    table <- performance.table(matches.df)
+
+    position.weight.application <- function(performance.difference, position) {
+        position.weight <- position.weight.factor^(position - 1)
+
+        performance.difference * position.weight
+    }
+
+    summary <- table |>
+        mutate(
+            performance.shift = lead(performance),
+            performance.difference = performance - performance.shift
+        ) |>
+        drop_na(performance.difference) |>
+        mutate(weighted.performance.difference = imap_dbl(performance.difference, position.weight.application)) |>
+        summarise(total.performance.difference = sum(weighted.performance.difference))
+
+    summary$total.performance.difference
+}
+
+```
+
+``` {r}
+
+tibble(league = names(leagues.data)) |>
+    mutate(league.performance.difference = map_dbl(leagues.data, \(x) round(net.performance.difference(x), 3))) |>
+    arrange(desc(league.performance.difference)) |>
+    kable(col.names = c("Competición", "Diferencia Neta de Rendimiento"))
+
+```
+
+De esta manera, la mediana de las diferencias netas de rendimiento
+corresponde a la de la Premier League i.e. la Premier League es la
+liga de referencia para calcular la medida de competitividad.
+
+``` {r}
+
+median.performance.difference <- leagues.data |>
+    map_dbl(net.performance.difference) |>
+    median()
+
+```
+
+Dicho esto, se calcula la medida de competitividad para cada liga.
+
+``` {r}
+
+league.rating <- function(league.identifier) {
+    league.performance.difference <- net.performance.difference(leagues.data[[league.identifier]])
+    saturation <- league.performance.difference / (league.performance.difference + median.performance.difference)
+    complement <- 1 - saturation
+
+    complement
+}
+
+```
+
+``` {r}
+
+tibble(league = names(leagues.data)) |>
+    mutate(rating = map_dbl(league, \(x) round(league.rating(x), 3))) |>
+    arrange(desc(rating)) |>
+    kable(col.names = c("Competición", "Competitividad"))
+
+```
+
+Mediante esto, se observa que la Serie A y La Liga son las ligas más
+competitivas con niveles competitividad muy similares. También, la
+Bundesliga es por una diferencia significativa, la liga menos
+competitiva. Finalmente, la Ligue 1 y la Premier League (i.e. liga de
+referencia) tienen niveles de competitividad muy cercanos.
+
+# Bibliografía
+
+Football Data Co UK. (2026). _European Football Results and Betting
+Odds_ [Conjunto de Datos]. _https://football-data.co.uk/downloadm.php_
+
+# Anexos
